@@ -9,6 +9,7 @@ namespace NPTP.ReferenceableScriptables.Editor
     {
         private ReferenceableScriptable refableScriptable;
         private SerializedProperty referenceable;
+        private SerializedProperty guid;
 
         private bool referenceableValue;
 
@@ -16,6 +17,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             refableScriptable = (ReferenceableScriptable)target;
             referenceable = serializedObject.FindProperty(nameof(referenceable));
+            guid = serializedObject.FindProperty(nameof(guid));
             referenceableValue = referenceable.boolValue;
         }
         
@@ -26,16 +28,16 @@ namespace NPTP.ReferenceableScriptables.Editor
             if (previousReferenceableValue != referenceableValue)
             {
                 if (referenceableValue)
-                {
                     AssetCreator.MakeReferenceable(refableScriptable);
-                    Debug.Log("Make refable");
-                }
                 else
-                {
                     AssetCreator.RemoveReferenceable(refableScriptable);
-                    Debug.Log("Remove refable");
-                }
             }
+
+            if (referenceableValue)
+            {
+                EditorGUILayout.PropertyField(guid, new GUIContent("Referenceable Address"));
+            }
+            
             EditorInspectorUtility.DrawHorizontalLine();
             DrawDefaultInspector();
             referenceable.boolValue = referenceableValue;
