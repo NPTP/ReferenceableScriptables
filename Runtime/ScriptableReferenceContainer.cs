@@ -5,9 +5,6 @@ using UnityEngine.Serialization;
 
 namespace NPTP.ReferenceableScriptables
 {
-    /// <summary>
-    /// Note this code is taken from one of Nick's personal projects, pls don't steal it thx :)
-    /// </summary>
     public class ScriptableReferenceContainer : ScriptableObject
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
