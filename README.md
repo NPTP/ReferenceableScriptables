@@ -8,4 +8,4 @@ One solution is to load all SOs via Addressables. But if you can't do that, or d
 
 #### To-do list:
 - [ ] Generate a "database" with a guid->path table that all refable scriptables can reference into via their own guid as a key. This keeps the keys stable, while paths might change.
-- 
+- [ ] A dropdown selector for all refable scriptables existing in the table, which you can use as a serialized field in the inspector to load refable scriptables easily (by name of asset).
