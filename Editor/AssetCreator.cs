@@ -43,7 +43,12 @@ namespace NPTP.ReferenceableScriptables.Editor
             CreatePath(GetAssetsFolderPath(scriptableType));
             ReflectionUtility.InvokeStaticMethod<ReferenceablesTable>("Add", guid, GetResourcesContainerPath(scriptableType, guid));
             AssetDatabase.CreateAsset(container, GetAssetsContainerPath(scriptableType, guid));
+            
+            EditorUtility.SetDirty(scriptable);
+            EditorUtility.SetDirty(container);
+            
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
         
         internal static void RemoveReferenceable(ReferenceableScriptable scriptable)
