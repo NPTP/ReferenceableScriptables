@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables
+namespace NPTP.ReferenceableScriptables.AssetTypes
 {
     /// <summary>
     /// Container pointing to the desired ReferenceableScriptable, to be loaded in and out via Resources.

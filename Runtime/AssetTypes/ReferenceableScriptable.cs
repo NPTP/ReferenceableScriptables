@@ -1,7 +1,7 @@
 using NPTP.ReferenceableScriptables.Attributes;
 using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables
+namespace NPTP.ReferenceableScriptables.AssetTypes
 {
     public abstract class ReferenceableScriptable : ScriptableObject
     {

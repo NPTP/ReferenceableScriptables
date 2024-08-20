@@ -2,7 +2,7 @@ using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables.Editor
+namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
 {
     [CustomEditor(typeof(ReferenceablesTable))]
     public class ReferenceablesTableEditor : UnityEditor.Editor
@@ -13,7 +13,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             EditorInspectorUtility.DrawHorizontalLine();
             if (GUILayout.Button("Clean Referenceables"))
             {
-                ReferenceablesTable.Clean();
+                Referenceables.Clean();
             }
             serializedObject.ApplyModifiedProperties();
         }

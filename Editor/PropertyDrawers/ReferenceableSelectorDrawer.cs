@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using NPTP.ReferenceableScriptables.Utilities.Collections;
 using UnityEditor;

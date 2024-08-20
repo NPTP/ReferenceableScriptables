@@ -1,4 +1,5 @@
 using System;
+using NPTP.ReferenceableScriptables.AssetTypes;
 using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables

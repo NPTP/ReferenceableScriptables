@@ -1,7 +1,8 @@
+using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
 
-namespace NPTP.ReferenceableScriptables.Editor
+namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
 {
     [CustomEditor(typeof(ReferenceableScriptable), editorForChildClasses: true)]
     public class ReferenceableScriptableEditor : UnityEditor.Editor
