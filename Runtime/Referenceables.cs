@@ -58,7 +58,13 @@ namespace NPTP.ReferenceableScriptables
             return $"Referenceables/{scriptableType.Name}/{containerName}";
         }
 
-        public static void MakeReferenceable(ReferenceableScriptable scriptable)
+        public static void MakeReferenceable(ReferenceableScriptable scriptable, bool referenceable)
+        {
+            if (referenceable) AddReferenceable(scriptable);
+            else RemoveReferenceable(scriptable);
+        }
+
+        private static void AddReferenceable(ReferenceableScriptable scriptable)
         {
             if (ReferenceablesTable.IsValidEntry(scriptable))
             {
@@ -75,7 +81,7 @@ namespace NPTP.ReferenceableScriptables
             ScriptableReferenceContainer container = ScriptableObject.CreateInstance<ScriptableReferenceContainer>();
             ReflectionUtility.SetSerializedField(container, "reference", scriptable);
             CreatePath(GetAssetsFolderPath(scriptableType));
-            ReflectionUtility.InvokeStaticMethod<ReferenceablesTable>("Add", scriptable);
+            ReferenceablesTable.Add(scriptable);
             AssetDatabase.CreateAsset(container, GetAssetsContainerPath(scriptableType, guid));
 
             EditorUtility.SetDirty(scriptable);
@@ -85,12 +91,17 @@ namespace NPTP.ReferenceableScriptables
             AssetDatabase.Refresh();
         }
 
-        public static void RemoveReferenceable(ReferenceableScriptable scriptable)
+        private static void RemoveReferenceable(ReferenceableScriptable scriptable)
         {
-            ReflectionUtility.InvokeStaticMethod<ReferenceablesTable>("Remove", scriptable);
+            ReferenceablesTable.Remove(scriptable);
+            if (DeleteEmptyFolders())
+            {
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
         }
 
-        public static void CreatePath(string assetPath)
+        private static void CreatePath(string assetPath)
         {
             if (!assetPath.StartsWith("Assets/"))
             {

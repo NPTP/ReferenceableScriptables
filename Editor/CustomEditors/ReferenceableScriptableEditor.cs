@@ -26,10 +26,7 @@ namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
             
             if (previousReferenceableValue != referenceableValue)
             {
-                if (referenceableValue)
-                    Referenceables.MakeReferenceable(scriptable);
-                else
-                    Referenceables.RemoveReferenceable(scriptable);
+                Referenceables.MakeReferenceable(scriptable, referenceableValue);
             }
 
             if (referenceableValue)

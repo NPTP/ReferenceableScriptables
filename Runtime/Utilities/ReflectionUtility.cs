@@ -36,23 +36,5 @@ namespace NPTP.ReferenceableScriptables.Utilities
                 fieldInfo.SetValue(instance, value);
             }
         }
-        
-        public static void InvokeStaticMethod<T>(string methodName, params object[] parameters)
-        {
-            MethodInfo methodInfo = typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-            if (methodInfo == null)
-            {
-                return;
-            }
-
-            try
-            {
-                methodInfo.Invoke(null, parameters);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
-        }
     }
 }
