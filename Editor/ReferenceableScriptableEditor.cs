@@ -15,7 +15,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             scriptable = (ReferenceableScriptable)target;
             guid = serializedObject.FindProperty(nameof(guid));
-            referenceableValue = ReferenceablesTable.IsEntryValid(scriptable);
+            referenceableValue = ReferenceablesTable.IsValidEntry(scriptable);
         }
         
         public override void OnInspectorGUI()
@@ -26,9 +26,9 @@ namespace NPTP.ReferenceableScriptables.Editor
             if (previousReferenceableValue != referenceableValue)
             {
                 if (referenceableValue)
-                    AssetCreator.MakeReferenceable(scriptable);
+                    Referenceables.MakeReferenceable(scriptable);
                 else
-                    AssetCreator.RemoveReferenceable(scriptable);
+                    Referenceables.RemoveReferenceable(scriptable);
             }
 
             if (referenceableValue)
@@ -36,7 +36,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                 EditorGUILayout.PropertyField(guid);
             }
             
-            referenceableValue = ReferenceablesTable.IsEntryValid(scriptable);
+            referenceableValue = ReferenceablesTable.IsValidEntry(scriptable);
 
             EditorInspectorUtility.DrawHorizontalLine();
             DrawDefaultInspector();

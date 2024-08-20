@@ -5,7 +5,7 @@ namespace NPTP.ReferenceableScriptables
 {
     public abstract class ReferenceableScriptable : ScriptableObject
     {
-        [SerializeField][GUIDisabled] private string guid;
+        [SerializeField][HideInInspector][GUIDisabled] private string guid;
         public string Guid => guid;
     }
 }

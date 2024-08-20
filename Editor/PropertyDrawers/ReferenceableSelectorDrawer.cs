@@ -13,6 +13,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
     {
         private bool hasInitialized;
         private bool noItemsFound;
+        private Type genericType;
         private string[] guids;
         private string[] paths;
 
@@ -31,7 +32,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
             if (noItemsFound)
             {
                 EditorGUI.BeginProperty(position, label, property);
-                EditorGUI.Popup(position, label.text, 0, new[] { "No Referenceables found." });
+                EditorGUI.Popup(position, label.text, 0, new[] { $"No assets of type <{genericType.Name}> found." });
                 guidProperty.stringValue = string.Empty;
                 EditorGUI.EndProperty();
                 return;
@@ -61,7 +62,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
                 hasInitialized = true;
                 var table = ReferenceablesTable.Table;
 
-                if (!TryGetGenericType(property, out Type genericType))
+                if (!TryGetGenericType(property, out genericType))
                 {
                     return;
                 }
@@ -81,17 +82,14 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
                     {
                         guidsList.Add(combo.Key);
                         string usefulPath = combo.Value;
-                        pathsList.Add(usefulPath
-                                          .Remove(usefulPath.LastIndexOf('/') + 1)
-                                          .Remove(0, $"Referenceables/{genericType.Name}".Length + 1)
-                                      + container.Reference.name);
+                        pathsList.Add(container.Reference.name);
                     }
                 }
 
                 guids = guidsList.ToArray();
                 paths = pathsList.ToArray();
 
-                if (guids.Length == 0 || paths.Length == 0)
+                if (guids.Length == 1 || paths.Length == 1)
                 {
                     noItemsFound = true;
                 }

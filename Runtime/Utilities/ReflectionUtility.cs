@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables.Editor.Utilities
+namespace NPTP.ReferenceableScriptables.Utilities
 {
     public class ReflectionUtility : MonoBehaviour
     {

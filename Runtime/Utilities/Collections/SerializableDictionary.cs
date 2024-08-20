@@ -236,6 +236,26 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             
             return internalDictionary.ContainsKey(key);
         }
+        
+        public bool ContainsValue(TValue value)
+        {
+#if UNITY_EDITOR
+            if (!EditorApplication.isPlaying)
+            {
+                for (int i = 0; i < keyValueCombos.Count; i++)
+                {
+                    if (EqualityComparer<TValue>.Default.Equals(keyValueCombos[i].Value, value))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+#endif
+            
+            return internalDictionary.ContainsValue(value);
+        }
 
         public bool Remove(TKey key)
         {
