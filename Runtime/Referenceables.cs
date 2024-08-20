@@ -23,7 +23,7 @@ namespace NPTP.ReferenceableScriptables
         {
             scriptable = null;
             
-            if (!ReferenceablesTable.TryGetValue(guid, out string pathInsideResources))
+            if (!ReferenceablesTable.Table.TryGetValue(guid, out string pathInsideResources))
             {
                 return false;
             }
@@ -213,8 +213,8 @@ namespace NPTP.ReferenceableScriptables
             foreach (ScriptableReferenceContainer container in GetContainers())
             {
                 if (container.Reference == null ||
-                    !ReferenceablesTable.ContainsGuid(container.Reference.Guid) ||
-                    !ReferenceablesTable.ContainsContainer(container))
+                    !ReferenceablesTable.Table.ContainsKey(container.Reference.Guid) ||
+                    !ReferenceablesTable.Table.ContainsValue(Referenceables.ConvertAssetPathToResourcesPath(AssetDatabase.GetAssetPath(container))))
                 {
                     AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(container));
                     deleted = true;
@@ -277,7 +277,7 @@ namespace NPTP.ReferenceableScriptables
 
             foreach (string key in keysToRemove)
             {
-                ReferenceablesTable.Remove(key);
+                ReferenceablesTable.Table.Remove(key);
             }
 
             return dirty;

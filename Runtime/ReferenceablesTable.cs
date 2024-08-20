@@ -40,29 +40,16 @@ namespace NPTP.ReferenceableScriptables
         
         private static ReferenceablesTable CreateTable()
         {
-            ReferenceablesTable table = ScriptableObject.CreateInstance<ReferenceablesTable>();
+            ReferenceablesTable table = CreateInstance<ReferenceablesTable>();
+            
+#if UNITY_EDITOR
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 AssetDatabase.CreateFolder(parentFolder: "Assets", newFolderName: "Resources");
             AssetDatabase.CreateAsset(table, $"Assets/Resources/{nameof(ReferenceablesTable)}.asset");
             SetDirtySaveAndRefresh();
+#endif
+            
             return table;
-        }
-        
-        public static bool TryGetValue(string guid, out string pathInsideResources)
-        {
-            return Instance.guidToPathTable.TryGetValue(guid, out pathInsideResources);
-        }
-
-        public static bool Remove(string guid)
-        {
-            return Instance.guidToPathTable.Remove(guid);
-        }
-
-        public static bool ContainsGuid(string guid) => Instance.guidToPathTable.ContainsKey(guid);
-
-        public static bool ContainsContainer(ScriptableReferenceContainer container)
-        {
-            return Instance.guidToPathTable.ContainsValue(Referenceables.ConvertAssetPathToResourcesPath(AssetDatabase.GetAssetPath(container)));
         }
 
 #if UNITY_EDITOR
