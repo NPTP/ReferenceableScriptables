@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
@@ -58,6 +59,8 @@ namespace NPTP.ReferenceableScriptables.Editor
 
         private void OnGUI()
         {
+            bool shouldRefresh = false;
+            
             EditorGUILayout.LabelField("Referenceables", EditorStyles.whiteLargeLabel);
             EditorInspectorUtility.DrawHorizontalLine();
             EditorGUILayout.Space();
@@ -69,12 +72,14 @@ namespace NPTP.ReferenceableScriptables.Editor
 
             if (GUILayout.Button("Make All Referenceable"))
             {
-                MakeAllReferenceable(true);
+                MakeAllReferenceable(scriptables, true);
+                shouldRefresh = true;
             }
 
             if (GUILayout.Button("Remove All Referenceable"))
             {
-                MakeAllReferenceable(false);
+                MakeAllReferenceable(scriptables, false);
+                shouldRefresh = true;
             }
 
             EditorInspectorUtility.DrawHorizontalLine();
@@ -87,6 +92,19 @@ namespace NPTP.ReferenceableScriptables.Editor
                 List<ReferenceableToggler> list = keyValuePair.Value;
                 
                 EditorGUILayout.LabelField(typeName, EditorStyles.whiteLargeLabel);
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button($"Make All {typeName} Referenceable"))
+                {
+                    MakeAllReferenceable(list.Select(toggler => toggler.scriptable).ToList(), true);
+                    shouldRefresh = true;
+                }
+                if (GUILayout.Button($"Remove All {typeName} Referenceable"))
+                {
+                    MakeAllReferenceable(list.Select(toggler => toggler.scriptable).ToList(), false);
+                    shouldRefresh = true;
+                }
+                EditorGUILayout.EndHorizontal();
                 
                 EditorGUILayout.BeginHorizontal();
             
@@ -111,6 +129,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                     if (previousValue != list[i].toggle)
                     {
                         MakeReferenceable(scriptables[i], list[i].toggle);
+                        shouldRefresh = true;
                     }
 
                     EditorGUILayout.EndHorizontal();
@@ -120,6 +139,11 @@ namespace NPTP.ReferenceableScriptables.Editor
             }
             
             EditorGUILayout.EndScrollView();
+
+            if (shouldRefresh)
+            {
+                Refresh();
+            }
         }
 
         private void MakeReferenceable(ReferenceableScriptable scriptable, bool referenceable)
@@ -127,14 +151,12 @@ namespace NPTP.ReferenceableScriptables.Editor
             Referenceables.MakeReferenceable(scriptable, referenceable);
         }
 
-        private void MakeAllReferenceable(bool referenceable)
+        private void MakeAllReferenceable(IEnumerable<ReferenceableScriptable> collection, bool referenceable)
         {
-            for (int i = 0; i < scriptables.Length; i++)
+            foreach (ReferenceableScriptable scriptable in collection)
             {
-                Referenceables.MakeReferenceable(scriptables[i], referenceable);
+                Referenceables.MakeReferenceable(scriptable, referenceable);
             }
-            
-            Refresh();
         }
     }
 }

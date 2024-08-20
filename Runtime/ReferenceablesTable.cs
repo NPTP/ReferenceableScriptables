@@ -19,6 +19,9 @@ namespace NPTP.ReferenceableScriptables
                 {
                     if (!Exists(out instance))
                         instance = CreateTable();
+                    
+                    // Guarantee the table is ready
+                    instance.guidToPathTable.OnAfterDeserialize();
                 }
 
                 return instance;
