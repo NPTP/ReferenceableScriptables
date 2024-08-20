@@ -128,7 +128,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                     list[i].toggle = EditorGUILayout.Toggle(list[i].toggle, GUILayout.Width(100));
                     if (previousValue != list[i].toggle)
                     {
-                        MakeReferenceable(scriptables[i], list[i].toggle);
+                        MakeReferenceable(list[i].scriptable, list[i].toggle);
                         shouldRefresh = true;
                     }
 

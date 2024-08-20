@@ -1,6 +1,9 @@
 # Referenceable Scriptables
 ## Changelog
 
+1.1.3
+- Fix bug with setting incorrect Referenceable toggle in the management editor window
+
 1.1.2
 - Set Referenceables Table dirty after adding entry.
 
