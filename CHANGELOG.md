@@ -1,6 +1,9 @@
 # Referenceable Scriptables
 ## Changelog
 
+1.1.2
+- Set Referenceables Table dirty after adding entry.
+
 1.1.1
 - Fix issues with serialized dictionary not deserializing properly
 - "Delete All <Type>" button per-type in the Referenceables Management editor window

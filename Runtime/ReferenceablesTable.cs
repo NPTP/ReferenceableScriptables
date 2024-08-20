@@ -85,8 +85,11 @@ namespace NPTP.ReferenceableScriptables
         {
             string guid = scriptable.Guid;
             string path = Referenceables.GetResourcesContainerPath(scriptable.GetType(), scriptable.Guid);
-            
-            guidToPathTable.Add(guid, path);
+
+            if (guidToPathTable.TryAdd(guid, path))
+            {
+                SetDirtySaveAndRefresh();
+            }
         }
 
         internal static void Remove(ReferenceableScriptable rs) => Instance.RemoveNonStatic(rs);
