@@ -1,42 +1,24 @@
-using UnityEngine;
-
 namespace NPTP.ReferenceableScriptables
 {
+    /// <summary>
+    /// Top class for runtime usage of Referenceable Scriptables.
+    /// </summary>
     public static class Referenceables
     {
-        public static bool TryLoad(string guid, out ReferenceableScriptable rs)
+        /// <summary>
+        /// Try to load a Referenceable Scriptable at the given guid address.
+        /// Note that there is no need to unload what is loaded - the scriptable reference stays on the stack.
+        /// </summary>
+        public static bool TryLoad<T>(string guid, out T scriptable) where T : ReferenceableScriptable
         {
-            var container = Resources.Load<ScriptableReferenceContainer>(GetResourcesPath<ReferenceableScriptable>(guid));
-            if (container == null || container.Reference is not ReferenceableScriptable tScriptable)
+            if (!ReferenceablesTable.TryLoad(guid, out var referenceableScriptable))
             {
-                rs = null;
+                scriptable = null;
                 return false;
             }
 
-            rs = tScriptable;
-            container.Loads++;
-            return true;
-        }
-
-        public static void Unload(ReferenceableScriptable rs)
-        {
-            if (rs == null || !ScriptableReferenceContainer.IsContainerLoaded(rs.Guid))
-            {
-                return;
-            }
-
-
-            ScriptableReferenceContainer container = ScriptableReferenceContainer.GetByGUID(rs.Guid);
-            if (container != null)
-            {
-                container.Loads--;
-            }
-        }
-
-        private static string GetResourcesPath<T>(string guid)
-        {
-            // TODO: Use the "database" once implemented
-            return $"ScriptableReferenceContainers/{typeof(T).Name}/{guid}";
+            scriptable = referenceableScriptable as T;
+            return scriptable != null;
         }
     }
 }

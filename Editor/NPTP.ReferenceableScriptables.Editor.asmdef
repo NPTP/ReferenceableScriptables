@@ -2,7 +2,7 @@
     "name": "ReferenceableScriptables.Editor",
     "rootNamespace": "NPTP.ReferenceableScriptables.Editor",
     "references": [
-        "GUID:64aa99ff9146b904789636b5238beaec"
+        "GUID:3ef7a97141423e346a907efef13461ee"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,46 +1,45 @@
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
-using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables.Editor
 {
-    [CustomEditor(typeof(ReferenceableScriptable), editorForChildClasses: true)][CanEditMultipleObjects]
+    [CustomEditor(typeof(ReferenceableScriptable), editorForChildClasses: true)]
     public class ReferenceableScriptableEditor : UnityEditor.Editor
     {
-        private ReferenceableScriptable refableScriptable;
-        private SerializedProperty referenceable;
+        private ReferenceableScriptable scriptable;
         private SerializedProperty guid;
 
         private bool referenceableValue;
 
         protected virtual void OnEnable()
         {
-            refableScriptable = (ReferenceableScriptable)target;
-            referenceable = serializedObject.FindProperty(nameof(referenceable));
+            scriptable = (ReferenceableScriptable)target;
             guid = serializedObject.FindProperty(nameof(guid));
-            referenceableValue = referenceable.boolValue;
+            referenceableValue = ReferenceablesTable.IsEntryValid(scriptable);
         }
         
         public override void OnInspectorGUI()
         {
-            bool previousReferenceableValue = referenceable.boolValue;
-            referenceableValue = EditorGUILayout.Toggle(nameof(referenceable).CapitalizeFirst(), referenceable.boolValue);
+            bool previousReferenceableValue = referenceableValue;
+            referenceableValue = EditorGUILayout.Toggle("Referenceable", referenceableValue);
+            
             if (previousReferenceableValue != referenceableValue)
             {
                 if (referenceableValue)
-                    AssetCreator.MakeReferenceable(refableScriptable);
+                    AssetCreator.MakeReferenceable(scriptable);
                 else
-                    AssetCreator.RemoveReferenceable(refableScriptable);
+                    AssetCreator.RemoveReferenceable(scriptable);
             }
 
             if (referenceableValue)
             {
-                EditorGUILayout.PropertyField(guid, new GUIContent("Referenceable Address"));
+                EditorGUILayout.PropertyField(guid);
             }
             
+            referenceableValue = ReferenceablesTable.IsEntryValid(scriptable);
+
             EditorInspectorUtility.DrawHorizontalLine();
             DrawDefaultInspector();
-            referenceable.boolValue = referenceableValue;
             serializedObject.ApplyModifiedProperties();
         }
     }

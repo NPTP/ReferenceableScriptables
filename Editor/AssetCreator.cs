@@ -9,44 +9,46 @@ namespace NPTP.ReferenceableScriptables.Editor
 {
     public static class AssetCreator
     {
-        private static string ResourcesFolder(Type rsType) => $"ScriptableReferenceContainers/{rsType.Name}";
-        private static string AssetPath(Type rsType, string guid) => $"Assets/Resources/{ResourcesFolder(rsType)}/{guid}.asset";
-        
-        internal static void MakeReferenceable(ReferenceableScriptable rs)
+        private static string GetAssetsFolderPath(Type scriptableType)
         {
-            return;
-            
-            // TODO: Steps.
-            // 1. Check if ReferenceablesTable exists. If not, create it.
-            // 2. Check that ReferenceablesTables matches rs's information. If so, return early.
-            // 3. Create the container, hook it up to rs.
-            // 4. Update the ReferenceablesTable for the new rs.
-            
-            ScriptableReferenceContainer container = rs.EDITOR_ReferenceContainer;
-            if (rs.EDITOR_ReferenceContainer != null)
+            return $"Assets/Resources/Referenceables/{scriptableType.Name}";
+        }
+        
+        private static string GetAssetsContainerPath(Type scriptableType, string containerName)
+        {
+            return $"Assets/Resources/{GetResourcesContainerPath(scriptableType, containerName)}.asset";
+        }
+
+        private static string GetResourcesContainerPath(Type scriptableType, string containerName)
+        {
+            return $"Referenceables/{scriptableType.Name}/{containerName}";
+        }
+        
+        internal static void MakeReferenceable(ReferenceableScriptable scriptable)
+        {
+            if (ReferenceablesTable.IsEntryValid(scriptable))
             {
-                // TODO: Resources path goes into "database"
-                // rs.EDITOR_SetResourcesPath(AssetDatabase.GetAssetPath(container));
                 return;
             }
 
-            if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(rs, out string guid, out long _))
+            if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(scriptable, out string guid, out long _))
             {
                 return;
             }
 
-            rs.EDITOR_SetGuid(guid);
-            container = ScriptableObject.CreateInstance<ScriptableReferenceContainer>();
-            CreatePath($"Assets/Resources/{ResourcesFolder(rs.GetType())}");
-            Debug.Log($"Creating new {nameof(ScriptableReferenceContainer)} at {AssetPath(rs.GetType(), rs.Guid)}.", container);
-            container.EDITOR_SetScriptableObjectReference(rs);
-            rs.EDITOR_ReferenceContainer = container;
-            
-            // TODO: Resources path goes into "database"
-            // rs.EDITOR_SetResourcesPath(AssetPath(rs.GetType(), rs.Guid));
-            
-            AssetDatabase.CreateAsset(container, AssetPath(rs.GetType(), rs.Guid));
+            Type scriptableType = scriptable.GetType();
+            ReflectionUtility.SetSerializedField(scriptable, "guid", guid);
+            ScriptableReferenceContainer container = ScriptableObject.CreateInstance<ScriptableReferenceContainer>();
+            ReflectionUtility.SetSerializedField(container, "reference", scriptable);
+            CreatePath(GetAssetsFolderPath(scriptableType));
+            ReflectionUtility.InvokeStaticMethod<ReferenceablesTable>("Add", guid, GetResourcesContainerPath(scriptableType, guid));
+            AssetDatabase.CreateAsset(container, GetAssetsContainerPath(scriptableType, guid));
             AssetDatabase.SaveAssets();
+        }
+        
+        internal static void RemoveReferenceable(ReferenceableScriptable scriptable)
+        {
+            ReflectionUtility.InvokeStaticMethod<ReferenceablesTable>("Remove", scriptable);
         }
 
         private static void CreatePath(string fullPath)
@@ -71,23 +73,6 @@ namespace NPTP.ReferenceableScriptables.Editor
                 folders[0] = concat;
                 folders.RemoveAt(1);
             }
-        }
-
-        internal static void RemoveReferenceable(ReferenceableScriptable rs)
-        {
-            // Search all containers and remove any that refer back to this rs. 
-            string[] guids = AssetDatabase.FindAssets($"t:{nameof(ScriptableReferenceContainer)}", new[] { "Assets/Resources" });
-            foreach (string guid in guids)
-            {
-                var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>(guid);
-                if (container != null && container.Reference == rs)
-                {
-                    AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid));
-                }
-            }
-
-            // Remove the rs guid entry from the ReferenceablesTable if it exists.
-            ReflectionUtility.TryInvokeStaticMethod(typeof(ReferenceablesTable), "Remove", rs.Guid);
         }
     }
 }

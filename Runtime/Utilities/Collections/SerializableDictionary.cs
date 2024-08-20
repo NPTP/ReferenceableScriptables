@@ -21,7 +21,20 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 
         public ICollection<TKey> Keys => internalDictionary.Keys;
         public ICollection<TValue> Values => internalDictionary.Values;
-        public int Count => internalDictionary.Count;
+
+        public int Count
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!EditorApplication.isPlaying)
+                {
+                    return keyValueCombos.Count;
+                }
+#endif
+                return internalDictionary.Count;
+            }
+        }
         
 #if UNITY_EDITOR
         private static bool isPlaying;
@@ -34,7 +47,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 
             void handlePlayModeStateChanged(PlayModeStateChange playModeStateChange)
             {
-                isPlaying = playModeStateChange is PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingPlayMode;
+                EditorApplication.isPlaying = playModeStateChange is PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingPlayMode;
             }
         }
 #endif
@@ -44,7 +57,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             get
             {
 #if UNITY_EDITOR
-                if (!isPlaying)
+                if (!EditorApplication.isPlaying)
                 {
                     for (int i = 0; i < keyValueCombos.Count; i++)
                     {
@@ -64,7 +77,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             set
             {
 #if UNITY_EDITOR
-                if (!isPlaying)
+                if (!EditorApplication.isPlaying)
                 {
                     for (int i = 0; i < keyValueCombos.Count; i++)
                     {
@@ -90,7 +103,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             get
             {
 #if UNITY_EDITOR
-                if (!isPlaying)
+                if (!EditorApplication.isPlaying)
                 {
                     for (int i = 0; i < keyValueCombos.Count; i++)
                     {
@@ -119,7 +132,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public void ChangeKey(TValue value, TKey newKey)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                
                 for (int i = 0; i < keyValueCombos.Count; i++)
@@ -156,7 +169,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public void AddRange(IDictionary<TKey, TValue> items)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 List<KeyValueCombo<TKey, TValue>> pairs = new();
                 foreach (KeyValuePair<TKey, TValue> pair in items)
@@ -180,7 +193,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public void Add(TKey key, TValue value)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 foreach (KeyValueCombo<TKey, TValue> keyValueCombo in keyValueCombos)
                 {
@@ -202,7 +215,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public bool TryAdd(TKey key, TValue value)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 foreach (KeyValueCombo<TKey, TValue> keyValueCombo in keyValueCombos)
                 {
@@ -223,7 +236,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public bool ContainsKey(TKey key)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 for (int i = 0; i < keyValueCombos.Count; i++)
                 {
@@ -243,7 +256,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public bool Remove(TKey key)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 for (int i = 0; i < keyValueCombos.Count; i++)
                 {
@@ -263,7 +276,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public bool TryGetValue(TKey key, out TValue value)
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 for (int i = 0; i < keyValueCombos.Count; i++)
                 {
@@ -284,7 +297,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public void Clear()
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 keyValueCombos.Clear();
                 return;
@@ -296,7 +309,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public IEnumerator GetEnumerator()
         {
 #if UNITY_EDITOR
-            if (!isPlaying)
+            if (!EditorApplication.isPlaying)
             {
                 return keyValueCombos.GetEnumerator();
             }
