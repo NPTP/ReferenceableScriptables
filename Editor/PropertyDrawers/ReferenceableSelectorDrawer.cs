@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
 {
-    [CustomPropertyDrawer(typeof(Referenceable<>), useForChildren: true)]
+    [CustomPropertyDrawer(typeof(Referenceable<>))]
     public class ReferenceableSelectorDrawer : PropertyDrawer
     {
         private bool hasInitialized;
