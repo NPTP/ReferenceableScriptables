@@ -4,14 +4,10 @@ using UnityEngine;
 namespace NPTP.ReferenceableScriptables
 {
     [Serializable]
-    public class ReferenceableSelector
+    public class Referenceable<T> where T : ReferenceableScriptable
     {
         [SerializeField] protected string guid;
-    }
-
-    [Serializable]
-    public class Referenceable<T> : ReferenceableSelector where T : ReferenceableScriptable
-    {
+        
         public bool TryLoad(out T scriptable)
         {
             if (string.IsNullOrEmpty(guid))

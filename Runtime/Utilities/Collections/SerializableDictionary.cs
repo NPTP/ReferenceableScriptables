@@ -35,22 +35,6 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
                 return internalDictionary.Count;
             }
         }
-        
-#if UNITY_EDITOR
-        private static bool isPlaying;
-        
-        [InitializeOnLoadMethod]
-        private static void EditorApplicationPlayModeState()
-        {
-            EditorApplication.playModeStateChanged -= handlePlayModeStateChanged;
-            EditorApplication.playModeStateChanged += handlePlayModeStateChanged;
-
-            void handlePlayModeStateChanged(PlayModeStateChange playModeStateChange)
-            {
-                EditorApplication.isPlaying = playModeStateChange is PlayModeStateChange.EnteredPlayMode or PlayModeStateChange.ExitingPlayMode;
-            }
-        }
-#endif
 
         public TValue this[TKey key]
         {

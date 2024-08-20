@@ -8,7 +8,6 @@ namespace NPTP.ReferenceableScriptables
     public class ScriptableReferenceContainer : ScriptableObject
     {
         [SerializeField] private ReferenceableScriptable reference;
-        internal ReferenceableScriptable Reference => reference;
-        public string ReferenceName => reference.name;
+        public ReferenceableScriptable Reference => reference;
     }
 }
