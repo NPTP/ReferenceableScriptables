@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using NPTP.ReferenceableScriptables.Editor.Utilities;
 using NPTP.ReferenceableScriptables.Utilities.Collections;
 using UnityEditor;
 using UnityEngine;
@@ -17,10 +18,16 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            Initialize(property);
-            
             SerializedProperty guidProperty = property.FindPropertyRelative("guid");
-
+            
+            if (Application.isPlaying)
+            {
+                ShowPlayModeProperty(position, property, label, guidProperty);
+                return;
+            }
+            
+            InitializeEditMode(property);
+            
             if (noItemsFound)
             {
                 EditorGUI.BeginProperty(position, label, property);
@@ -37,7 +44,17 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
             EditorGUI.EndProperty();
         }
 
-        private void Initialize(SerializedProperty property)
+        // TODO: Non-urgent, but maybe support play mode view & modification from runtime dictionary instead of just showing blocked guid
+        private static void ShowPlayModeProperty(Rect position, SerializedProperty property, GUIContent label, SerializedProperty guidProperty)
+        {
+            EditorGUI.BeginProperty(position, label, property);
+            EditorGUI.BeginDisabledGroup(disabled: true);
+            EditorGUI.PropertyField(position, guidProperty, new GUIContent(property.name.AsInspectorLabel()));
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.EndProperty();
+        }
+
+        private void InitializeEditMode(SerializedProperty property)
         {
             if (!hasInitialized)
             {
