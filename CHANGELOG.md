@@ -1,6 +1,9 @@
 # Referenceable Scriptables
 ## Changelog
 
+1.2.0
+- Fix a major bug loading from Resources (wrong path)
+
 1.1.3
 - Fix bug with setting incorrect Referenceable toggle in the management editor window
 

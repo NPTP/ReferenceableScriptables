@@ -61,7 +61,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
             if (!hasInitialized)
             {
                 hasInitialized = true;
-                var table = ReferenceablesTable.Table;
+                SerializableDictionary<string, string> table = ReferenceablesTable.EDITOR_GetTable();
 
                 if (!TryGetGenericType(property, out genericType))
                 {

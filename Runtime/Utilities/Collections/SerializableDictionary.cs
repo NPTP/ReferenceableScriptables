@@ -16,7 +16,6 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
     public sealed class SerializableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField] private List<KeyValueCombo<TKey, TValue>> keyValueCombos = new();
-        public List<KeyValueCombo<TKey, TValue>> KeyValueCombos => keyValueCombos;
 
         private Dictionary<TKey, TValue> internalDictionary = new();
 

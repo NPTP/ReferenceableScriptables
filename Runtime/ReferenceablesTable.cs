@@ -9,7 +9,8 @@ namespace NPTP.ReferenceableScriptables
     public class ReferenceablesTable : ScriptableObject
     {
         private static string AssetPathToThis => $"Assets/Resources/{nameof(ReferenceablesTable)}.asset";
-
+        private static string ResourcesPathToThis => nameof(ReferenceablesTable);
+        
         private static ReferenceablesTable instance;
         private static ReferenceablesTable Instance
         {
@@ -29,14 +30,16 @@ namespace NPTP.ReferenceableScriptables
         }
 
         [SerializeField][GUIDisabled] private SerializableDictionary<string, string> guidToPathTable = new();
-        public static SerializableDictionary<string, string> Table => Instance.guidToPathTable;
+        internal static SerializableDictionary<string, string> Table => Instance.guidToPathTable;
 
         private static bool Exists(out ReferenceablesTable table)
         {
 #if UNITY_EDITOR
-            table = AssetDatabase.LoadAssetAtPath<ReferenceablesTable>(AssetPathToThis);
+            table = EditorApplication.isPlaying
+                ? Resources.Load<ReferenceablesTable>(ResourcesPathToThis)
+                : AssetDatabase.LoadAssetAtPath<ReferenceablesTable>(AssetPathToThis);
 #else
-            table = Resources.Load<ReferenceablesTable>(AssetPathToThis);
+            table = Resources.Load<ReferenceablesTable>(ResourcesPathToThis);
 #endif
             return table != null;
         }
@@ -48,7 +51,7 @@ namespace NPTP.ReferenceableScriptables
 #if UNITY_EDITOR
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 AssetDatabase.CreateFolder(parentFolder: "Assets", newFolderName: "Resources");
-            AssetDatabase.CreateAsset(table, $"Assets/Resources/{nameof(ReferenceablesTable)}.asset");
+            AssetDatabase.CreateAsset(table, AssetPathToThis);
             SetDirtySaveAndRefresh();
 #endif
             
@@ -62,6 +65,8 @@ namespace NPTP.ReferenceableScriptables
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
+
+        public static SerializableDictionary<string, string> EDITOR_GetTable() => Table;
         
         public static bool IsValidEntry(ReferenceableScriptable scriptable) => Instance.IsValidEntryNonStatic(scriptable);
         private bool IsValidEntryNonStatic(ReferenceableScriptable scriptable)
