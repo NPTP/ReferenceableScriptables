@@ -1,6 +1,9 @@
 # Referenceable Scriptables
 ## Changelog
 
+1.2.1
+- Support multi-object editing on referenceable scriptable object assets
+
 1.2.0
 - Fix a major bug loading from Resources (wrong path)
 

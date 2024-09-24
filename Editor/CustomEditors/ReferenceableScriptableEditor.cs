@@ -1,22 +1,28 @@
+using System.Linq;
 using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
 
 namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
 {
-    [CustomEditor(typeof(ReferenceableScriptable), editorForChildClasses: true)]
+    [CustomEditor(typeof(ReferenceableScriptable), editorForChildClasses: true), CanEditMultipleObjects]
     public class ReferenceableScriptableEditor : UnityEditor.Editor
     {
-        private ReferenceableScriptable scriptable;
+        private ReferenceableScriptable[] scriptables;
         private SerializedProperty guid;
 
         private bool referenceableValue;
 
         protected virtual void OnEnable()
         {
-            scriptable = (ReferenceableScriptable)target;
+            scriptables = new ReferenceableScriptable[targets.Length];
+            for (int i = 0; i < targets.Length; i++)
+            {
+                scriptables[i] = (ReferenceableScriptable)targets[i];
+            }
+            
             guid = serializedObject.FindProperty(nameof(guid));
-            referenceableValue = ReferenceablesTable.IsValidEntry(scriptable);
+            referenceableValue = scriptables.All(ReferenceablesTable.IsValidEntry);
         }
         
         public override void OnInspectorGUI()
@@ -26,7 +32,8 @@ namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
             
             if (previousReferenceableValue != referenceableValue)
             {
-                Referenceables.MakeReferenceable(scriptable, referenceableValue);
+                foreach (ReferenceableScriptable scriptable in scriptables)
+                    Referenceables.MakeReferenceable(scriptable, referenceableValue);
             }
 
             if (referenceableValue)
@@ -34,7 +41,7 @@ namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
                 EditorGUILayout.PropertyField(guid);
             }
             
-            referenceableValue = ReferenceablesTable.IsValidEntry(scriptable);
+            referenceableValue = scriptables.All(ReferenceablesTable.IsValidEntry);
 
             EditorInspectorUtility.DrawHorizontalLine();
             DrawDefaultInspector();
