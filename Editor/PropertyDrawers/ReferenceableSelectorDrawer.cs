@@ -39,7 +39,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
                 return;
             }
 
-            int index = Mathf.Max(0, System.Array.IndexOf(guids, guidProperty.stringValue));
+            int index = Mathf.Max(0, Array.IndexOf(guids, guidProperty.stringValue));
             EditorGUI.BeginProperty(position, label, property);
             index = EditorGUI.Popup(position, label.text, index, paths);
             guidProperty.stringValue = guids[index];
@@ -82,7 +82,6 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
                     if (container.Reference.GetType() == genericType)
                     {
                         guidsList.Add(combo.Key);
-                        string usefulPath = combo.Value;
                         pathsList.Add(container.Reference.name);
                     }
                 }
