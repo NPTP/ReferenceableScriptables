@@ -5,7 +5,7 @@ using UnityEngine;
 namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(GUIDisabledAttribute))]
-    public class GUIDisabledAttributeDrawer : PropertyDrawer
+    internal sealed class GUIDisabledAttributeDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {

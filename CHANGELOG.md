@@ -1,6 +1,11 @@
 # Referenceable Scriptables
 ## Changelog
 
+2.0.0
+- Now supports any `ScriptableObject` instead of requiring inheritance from `ReferenceableScriptable`
+  - `ReferenceableScriptable` is removed, breaking compatibility with older projects.
+- Cleanup runtime/editor assemblies
+
 1.2.1
 - Support multi-object editing on referenceable scriptable object assets
 

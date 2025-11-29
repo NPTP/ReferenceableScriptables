@@ -1,11 +1,10 @@
 using System;
-using NPTP.ReferenceableScriptables.AssetTypes;
 using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables
 {
     [Serializable]
-    public class Referenceable<T> where T : ReferenceableScriptable
+    public class Referenceable<T> where T : ScriptableObject
     {
         [SerializeField] protected string guid;
         
@@ -17,7 +16,7 @@ namespace NPTP.ReferenceableScriptables
                 return false;
             }
 
-            return Referenceables.TryLoad(guid, out scriptable);
+            return ReferenceablesTable.TryLoad(guid, out scriptable);
         }
     }
 }

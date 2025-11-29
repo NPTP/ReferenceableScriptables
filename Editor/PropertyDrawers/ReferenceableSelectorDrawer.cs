@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
-using NPTP.ReferenceableScriptables.Utilities.Collections;
+using NPTP.ReferenceableScriptables.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(Referenceable<>))]
-    public class ReferenceableSelectorDrawer : PropertyDrawer
+    internal sealed class ReferenceableSelectorDrawer : PropertyDrawer
     {
         private bool hasInitialized;
         private bool noItemsFound;
@@ -61,7 +60,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
             if (!hasInitialized)
             {
                 hasInitialized = true;
-                SerializableDictionary<string, string> table = ReferenceablesTable.EDITOR_GetTable();
+                SerializableDictionary<string, string> table = ReferenceablesTable.Table;
 
                 if (!TryGetGenericType(property, out genericType))
                 {
@@ -71,9 +70,12 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
                 List<string> guidsList = new() { string.Empty };
                 List<string> pathsList = new() { string.Empty };
 
-                foreach (KeyValueCombo<string, string> combo in table)
+                foreach (KVP<string, string> guidPathPair in table)
                 {
-                    var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>($"Assets/Resources/{combo.Value}.asset");
+                    string guid = guidPathPair.Key;
+                    string path = guidPathPair.Value;
+                    
+                    var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>($"Assets/Resources/{path}.asset");
                     if (container == null || container.Reference == null)
                     {
                         continue;
@@ -81,7 +83,7 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
 
                     if (container.Reference.GetType() == genericType)
                     {
-                        guidsList.Add(combo.Key);
+                        guidsList.Add(guid);
                         pathsList.Add(container.Reference.name);
                     }
                 }
