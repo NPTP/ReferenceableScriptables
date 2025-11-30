@@ -11,6 +11,17 @@ namespace NPTP.ReferenceableScriptables.Editor
 {
     internal static class Referenceables
     {
+        private static event Action onReferenceablesUpdated;
+        internal static event Action OnReferenceablesUpdated
+        {
+            add
+            {
+                onReferenceablesUpdated -= value;
+                onReferenceablesUpdated += value;
+            }
+            remove => onReferenceablesUpdated -= value;
+        }
+        
         #region Internal
         
         internal static bool IsValidEntry(ScriptableObject scriptable)
@@ -20,7 +31,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                 return false;
             }
 
-            var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>(GetContainerAssetPath(pathInsideResources));
+            var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(GetContainerAssetPath(pathInsideResources));
             if (container == null || container.Reference == null)
             {
                 return false;
@@ -47,6 +58,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             if (dirty)
             {
                 ReferenceablesTable.SetDirtySaveAndRefresh();
+                onReferenceablesUpdated?.Invoke();
             }
 
             Debug.Log($"Referenceables Table cleaned.");
@@ -132,20 +144,21 @@ namespace NPTP.ReferenceableScriptables.Editor
             }
 
             Type scriptableType = scriptable.GetType();
-            ReflectionUtility.SetSerializedField(scriptable, "guid", guid);
-            ScriptableReferenceContainer container = ScriptableObject.CreateInstance<ScriptableReferenceContainer>();
-            ReflectionUtility.SetSerializedField(container, "reference", scriptable);
+            ReferenceableScriptableContainer scriptableContainer = ScriptableObject.CreateInstance<ReferenceableScriptableContainer>();
+            ReflectionUtility.SetSerializedField(scriptableContainer, "reference", scriptable);
             CreatePath(GetAssetsFolderPath(scriptableType));
             
             AddToTable(scriptable);
             
-            AssetDatabase.CreateAsset(container, GetAssetsContainerPath(scriptableType, guid));
+            AssetDatabase.CreateAsset(scriptableContainer, GetAssetsContainerPath(scriptableType, guid));
 
             EditorUtility.SetDirty(scriptable);
-            EditorUtility.SetDirty(container);
+            EditorUtility.SetDirty(scriptableContainer);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            
+            onReferenceablesUpdated?.Invoke();
         }
         
         private static void AddToTable(ScriptableObject scriptable)
@@ -172,6 +185,8 @@ namespace NPTP.ReferenceableScriptables.Editor
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
+            
+            onReferenceablesUpdated?.Invoke();
         }
 
         private static void RemoveFromTable(ScriptableObject scriptable)
@@ -193,8 +208,8 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             bool dirty = false;
             
-            List<ScriptableReferenceContainer> containers = GetContainers();
-            foreach (ScriptableReferenceContainer container in containers)
+            List<ReferenceableScriptableContainer> containers = GetContainers();
+            foreach (ReferenceableScriptableContainer container in containers)
             {
                 string containingFolder = GetContainingFolderFromAssetPath(AssetDatabase.GetAssetPath(container));
 
@@ -214,7 +229,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             bool deleted = false;
             
-            foreach (ScriptableReferenceContainer container in GetContainers())
+            foreach (ReferenceableScriptableContainer container in GetContainers())
             {
                 if (container.Reference == scriptable)
                 {
@@ -230,7 +245,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             bool deleted = false;
             
-            foreach (ScriptableReferenceContainer container in GetContainers())
+            foreach (ReferenceableScriptableContainer container in GetContainers())
             {
                 if (container.Reference == null ||
                     !ReferenceablesTable.Table.ContainsKey(container.Reference.GetAssetGuid()) ||
@@ -244,17 +259,17 @@ namespace NPTP.ReferenceableScriptables.Editor
             return deleted;
         }
         
-        private static List<ScriptableReferenceContainer> GetContainers()
+        private static List<ReferenceableScriptableContainer> GetContainers()
         {
-            List<ScriptableReferenceContainer> containers = new();
-            string[] guids = AssetDatabase.FindAssets($"t:{nameof(ScriptableReferenceContainer)}", new[] { "Assets/Resources" });
+            List<ReferenceableScriptableContainer> containers = new();
+            string[] guids = AssetDatabase.FindAssets($"t:{nameof(ReferenceableScriptableContainer)}", new[] { "Assets/Resources" });
             foreach (string guid in guids)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                ScriptableReferenceContainer container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>(assetPath);
-                if (container != null)
+                ReferenceableScriptableContainer scriptableContainer = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(assetPath);
+                if (scriptableContainer != null)
                 {
-                    containers.Add(container);
+                    containers.Add(scriptableContainer);
                 }
             }
 
@@ -268,7 +283,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             foreach (KVP<string, string> combo in ReferenceablesTable.Table)
             {
                 string containerPath = GetContainerAssetPath(pathInsideResources: combo.Value);
-                var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>(containerPath);
+                var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(containerPath);
                 if (container == null)
                 {
                     keysToRemove.Add(combo.Key);

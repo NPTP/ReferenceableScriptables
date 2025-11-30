@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables.Editor
 {
-    internal sealed class ReferenceablesEditorWindow : EditorWindow
+    internal sealed class ReferenceablesManagementEditorWindow : EditorWindow
     {
         private class ReferenceableToggler
         {
@@ -23,7 +23,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         
         private const string MENU_ITEM_PATH = "Tools/Referenceables Management";
         
-        private static IEnumerable<Type> ExcludedScriptableObjectTypes => new[] { typeof(ReferenceablesTable), typeof(ScriptableReferenceContainer) };
+        private static IEnumerable<Type> ExcludedScriptableObjectTypes => new[] { typeof(ReferenceablesTable), typeof(ReferenceableScriptableContainer) };
 
         private readonly Dictionary<Type, List<ReferenceableToggler>> typeToReferenceableToggler = new();
         private ScriptableObject[] scriptables = Array.Empty<ScriptableObject>();
@@ -32,12 +32,13 @@ namespace NPTP.ReferenceableScriptables.Editor
         [MenuItem(MENU_ITEM_PATH)]
         private static void Init()
         {
-            ReferenceablesEditorWindow window = (ReferenceablesEditorWindow)GetWindow(typeof(ReferenceablesEditorWindow));
+            ReferenceablesManagementEditorWindow window = (ReferenceablesManagementEditorWindow)GetWindow(typeof(ReferenceablesManagementEditorWindow));
             window.Show();
         }
 
         private void OnEnable()
         {
+            titleContent = new GUIContent("Referenceables Management");
             Refresh();
         }
 
@@ -62,7 +63,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             bool shouldRefresh = false;
             
-            EditorGUILayout.LabelField("Referenceables", EditorStyles.whiteLargeLabel);
+            EditorGUILayout.LabelField("Referenceables Management", EditorStyles.whiteLargeLabel);
             EditorInspectorUtility.DrawHorizontalLine();
             EditorGUILayout.Space();
 

@@ -4,9 +4,12 @@ namespace NPTP.ReferenceableScriptables.Editor.Utilities
 {
     internal static class StringExtensions
     {
-        internal static string AsInspectorLabel(this string s) => s.SpaceBetweenWords().CapitalizeFirst();
-        
-        internal static string SpaceBetweenWords(this string s)
+        internal static string AsInspectorLabel(this string s)
+        {
+            return s.SpaceBetweenWords().CapitalizeFirst();
+        }
+
+        private static string SpaceBetweenWords(this string s)
         {
             StringBuilder sb = new();
             
@@ -33,8 +36,8 @@ namespace NPTP.ReferenceableScriptables.Editor.Utilities
 
             return sb.ToString();
         }
-        
-        internal static string CapitalizeFirst(this string s)
+
+        private static string CapitalizeFirst(this string s)
         {
             if (string.IsNullOrEmpty(s))
                 return string.Empty;

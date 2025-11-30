@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NPTP.ReferenceableScriptables.Attributes;
 using NPTP.ReferenceableScriptables.Utilities;
 using UnityEditor;
@@ -32,6 +33,7 @@ namespace NPTP.ReferenceableScriptables
 
         [SerializeField][GUIDisabled] private SerializableDictionary<string, string> guidToPathTable = new();
         internal static SerializableDictionary<string, string> Table => Instance.guidToPathTable;
+        internal static IEnumerable<string> Guids => Table.Keys;
         
         /// <summary>
         /// Try to load a Referenceable Scriptable at the given guid address.
@@ -48,7 +50,7 @@ namespace NPTP.ReferenceableScriptables
 
             ScriptableObject referenceableScriptable = null;
             
-            var container = Resources.Load<ScriptableReferenceContainer>(pathInsideResources);
+            var container = Resources.Load<ReferenceableScriptableContainer>(pathInsideResources);
             if (container != null)
             {
                 referenceableScriptable = container.Reference;

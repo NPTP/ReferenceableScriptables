@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
@@ -8,8 +10,15 @@ namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
     [CustomEditor(typeof(ScriptableObject), editorForChildClasses: true), CanEditMultipleObjects]
     public class ScriptableObjectEditor : UnityEditor.Editor
     {
-        private ScriptableObject[] scriptableObjects;
+        private const string REFERENCEABLE = "Referenceable";
 
+        private static IEnumerable<Type> TypesWithoutReferenceableOption => new[]
+        {
+            typeof(ReferenceablesTable),
+            typeof(ReferenceableScriptableContainer)
+        }; 
+        
+        private ScriptableObject[] scriptableObjects;
         private bool referenceableValue;
 
         private void OnEnable()
@@ -25,20 +34,23 @@ namespace NPTP.ReferenceableScriptables.Editor.CustomEditors
         
         public override void OnInspectorGUI()
         {
-            bool previousReferenceableValue = referenceableValue;
-            referenceableValue = EditorGUILayout.Toggle("Referenceable", referenceableValue);
-            
-            if (previousReferenceableValue != referenceableValue)
+            if (!TypesWithoutReferenceableOption.Contains(target.GetType()))
             {
-                foreach (ScriptableObject scriptable in scriptableObjects)
-                {
-                    Referenceables.MakeReferenceable(scriptable, referenceableValue);
-                }
-            }
+                bool previousReferenceableValue = referenceableValue;
+                referenceableValue = EditorGUILayout.Toggle(REFERENCEABLE, referenceableValue);
             
-            referenceableValue = scriptableObjects.All(Referenceables.IsValidEntry);
-
-            EditorInspectorUtility.DrawHorizontalLine();
+                if (previousReferenceableValue != referenceableValue)
+                {
+                    foreach (ScriptableObject scriptable in scriptableObjects)
+                    {
+                        Referenceables.MakeReferenceable(scriptable, referenceableValue);
+                    }
+                }
+            
+                referenceableValue = scriptableObjects.All(Referenceables.IsValidEntry);
+                EditorInspectorUtility.DrawHorizontalLine();
+            }
+          
             DrawDefaultInspector();
             serializedObject.ApplyModifiedProperties();
         }
