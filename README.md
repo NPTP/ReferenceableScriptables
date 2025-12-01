@@ -14,3 +14,5 @@ Enter this package, which allows you to treat SOs like Addressables, putting the
 Under the hood this automatically leverages Unity's Resources system without being forced to use Resources in the usual clunky way (fixed paths, fixed data locations, etc).
 
 Just check the box marked "Referenceable" at the top of the inspector on any `ScriptableObject`, or use the menu at Tools/Referenceables Management to modify this setting in aggregate on scriptable objects in your project.
+
+Any SO marked "Referenceable" can also have its ID serialized - this means your save/load system can recall and load SO assets by the ID alone.

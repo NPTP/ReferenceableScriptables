@@ -3,8 +3,10 @@
 
 2.0.0
 - Now supports any `ScriptableObject` instead of requiring inheritance from `ReferenceableScriptable`
-  - `ReferenceableScriptable` is removed, breaking compatibility with older projects.
+  - `ReferenceableScriptable` is removed as it is now redundant
+  - `Referenceable` type is also removed for the same reason. Use the serializable `ReferenceableScriptableID` instead.
 - Cleanup runtime/editor assemblies
+- Better custom inspector functionality
 
 1.2.1
 - Support multi-object editing on referenceable scriptable object assets
