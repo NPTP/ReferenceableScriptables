@@ -1,12 +1,11 @@
 using System;
 using System.Reflection;
-using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables.Utilities
+namespace NPTP.ReferenceableScriptables.Editor.Utilities
 {
-    public class ReflectionUtility : MonoBehaviour
+    internal static class ReflectionUtility
     {
-        public static void SetSerializedField(object instance, string fieldName, object value)
+        internal static void SetSerializedField(object instance, string fieldName, object value)
         {
             if (instance == null)
             {

@@ -2,11 +2,17 @@
 
 The Addressables package has a limitation when used in conjunction with a Scriptable Object (SO) in Unity.
 
-If an SO is loaded via Addressables, the SO and any references to other assets inside are baked into the Addressables asset library, such that they are effectively copies of the original assets. At runtime, this means that the same SO referenced directly in a scene and that loaded by Addressables are actually two separate instances.
+Addressable SOs get baked into their own asset library. Let's say we have an SO named "MyAsset".
 
-One solution is to load all SOs via Addressables. But if you can't do that, or don't want to do that, your options are a bit limited. Enter this package, which allows you to treat SOs like Addressables, putting them anywhere in your project, checking a box and loading them by a string key.
+If we reference "MyAsset" in a serialized field of type `ScriptableObject`, we'll refer to it as "MyAsset-A".
+The version of the asset in the Addressables library is a copy, which we'll refer to as "MyAsset-B".
 
-Under the hood this automatically leverages Unity's Resources system to load the SOs in/out, and it means that any references to the SO in scenes and prefabs will refer to the same instance that you're loading, so you can get the results you expect when operating on a particular SO instance, without being forced to use Resources in the usual clunky way (fixed paths, fixed data locations, etc).
+If we check "MyAsset-A" == "MyAsset-B" in code, we will get false, even though we thought we were checking the same asset!
 
-## HOW TO USE
-... Under Construction ...
+Enter this package, which allows you to treat SOs like Addressables, putting them anywhere in your project, checking a box and loading them in and out as required, but when you load "MyAsset", you are always getting "MyAsset-A" - the same one you expect when you reference "MyAsset" directly in a serialized field.
+
+Under the hood this automatically leverages Unity's Resources system without being forced to use Resources in the usual clunky way (fixed paths, fixed data locations, etc).
+
+Just check the box marked "Referenceable" at the top of the inspector on any `ScriptableObject`, or use the menu at Tools/Referenceables Management to modify this setting in aggregate on scriptable objects in your project.
+
+Any SO marked "Referenceable" can also have its ID serialized - this means your save/load system can recall and load SO assets by the ID alone.

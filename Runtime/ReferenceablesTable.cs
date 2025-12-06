@@ -1,15 +1,25 @@
-using NPTP.ReferenceableScriptables.AssetTypes;
+using System.Collections.Generic;
+using System.Linq;
 using NPTP.ReferenceableScriptables.Attributes;
-using NPTP.ReferenceableScriptables.Utilities.Collections;
-using UnityEditor;
+using NPTP.ReferenceableScriptables.Utilities;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using NPTP.ReferenceableScriptables.Utilities.Editor;
+#endif
 
 namespace NPTP.ReferenceableScriptables
 {
-    public class ReferenceablesTable : ScriptableObject
+    internal class ReferenceablesTable : ScriptableObject
     {
-        private static string AssetPathToThis => $"Assets/Resources/{nameof(ReferenceablesTable)}.asset";
         private static string ResourcesPathToThis => nameof(ReferenceablesTable);
+        
+        [SerializeField][GUIDisabled] private SerializableDictionary<string, string> guidToPathTable = new();
+        internal static SerializableDictionary<string, string> GuidToPathTable => Instance.guidToPathTable;
+
+        [SerializeField][GUIDisabled] private SerializableDictionary<string, string[]> nameToGuidsTable = new();
+        private static SerializableDictionary<string, string[]> NameToGuidsTable => Instance.nameToGuidsTable;
         
         private static ReferenceablesTable instance;
         private static ReferenceablesTable Instance
@@ -18,8 +28,10 @@ namespace NPTP.ReferenceableScriptables
             {
                 if (instance == null)
                 {
-                    if (!Exists(out instance))
+                    if (!TryLoad(out instance))
+                    {
                         instance = CreateTable();
+                    }
                     
                     // Guarantee the table is ready
                     instance.guidToPathTable.OnAfterDeserialize();
@@ -29,15 +41,108 @@ namespace NPTP.ReferenceableScriptables
             }
         }
 
-        [SerializeField][GUIDisabled] private SerializableDictionary<string, string> guidToPathTable = new();
-        internal static SerializableDictionary<string, string> Table => Instance.guidToPathTable;
+        internal static bool Add(string name, string guid, string path)
+        {
+            if (!GuidToPathTable.TryAdd(guid, path))
+            {
+                return false;
+            }
+            
+            if (NameToGuidsTable.TryGetValue(name, out var guids))
+            {
+                guids = guids.WithElementAdded(guid);
+            }
+            else
+            {
+                guids = new[] { guid };
+            }
 
-        private static bool Exists(out ReferenceablesTable table)
+            NameToGuidsTable[name] = guids;
+
+            return true;
+        }
+        
+        internal static bool Remove(string name, string guid)
+        {
+            if (!GuidToPathTable.Remove(guid))
+            {
+                return false;
+            }
+
+            if (!NameToGuidsTable.TryGetValue(name, out var guids))
+            {
+                return true;
+            }
+
+            for (int i = 0; i < guids.Length; i++)
+            {
+                if (guids[i] == guid)
+                {
+                    guids = guids.WithRemovedAt(i);
+                    break;
+                }
+            }
+
+            if (guids.Length == 0)
+            {
+                NameToGuidsTable.Remove(name);
+            }
+            else
+            {
+                NameToGuidsTable[name] = guids;
+            }
+
+            return true;
+        }
+
+        internal static bool ContainsEntry(string guid, string path)
+        {
+            return GuidToPathTable.ContainsKey(guid) || GuidToPathTable.ContainsValue(path);
+        }
+        
+        internal static bool TryGetResourcesPathByGuid(string guid, out string resourcesPath)
+        {
+            return GuidToPathTable.TryGetValue(guid, out resourcesPath);
+        }
+        
+        internal static bool TryGetGuidsByName(string name, out string[] guids)
+        {
+            return NameToGuidsTable.TryGetValue(name, out guids);
+        }
+        
+        /// <summary>
+        /// Try to load a Referenceable Scriptable at the given guid address.
+        /// Note that there is no need to unload what is loaded - the container is
+        /// unloaded and the referenced scriptable object ready for use stays on the stack.
+        /// </summary>
+        internal static bool TryLoad<T>(string guid, out T scriptable) where T : ScriptableObject
+        {
+            scriptable = null;
+            
+            if (!GuidToPathTable.TryGetValue(guid, out string pathInsideResources))
+            {
+                return false;
+            }
+
+            ScriptableObject referenceableScriptable = null;
+            
+            var container = Resources.Load<ReferenceableScriptableContainer>(pathInsideResources);
+            if (container != null)
+            {
+                referenceableScriptable = container.Reference;
+                Resources.UnloadAsset(container);
+            }
+
+            scriptable = referenceableScriptable as T;
+            return scriptable != null;
+        }
+
+        private static bool TryLoad(out ReferenceablesTable table)
         {
 #if UNITY_EDITOR
             table = EditorApplication.isPlaying
                 ? Resources.Load<ReferenceablesTable>(ResourcesPathToThis)
-                : AssetDatabase.LoadAssetAtPath<ReferenceablesTable>(AssetPathToThis);
+                : AssetDatabase.LoadAssetAtPath<ReferenceablesTable>(Paths.GetAssetPathFromResourcesPath(ResourcesPathToThis));
 #else
             table = Resources.Load<ReferenceablesTable>(ResourcesPathToThis);
 #endif
@@ -47,14 +152,15 @@ namespace NPTP.ReferenceableScriptables
         private static ReferenceablesTable CreateTable()
         {
             ReferenceablesTable table = CreateInstance<ReferenceablesTable>();
-            
 #if UNITY_EDITOR
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            {
                 AssetDatabase.CreateFolder(parentFolder: "Assets", newFolderName: "Resources");
-            AssetDatabase.CreateAsset(table, AssetPathToThis);
-            SetDirtySaveAndRefresh();
-#endif
+            }
             
+            AssetDatabase.CreateAsset(table, Paths.GetAssetPathFromResourcesPath(ResourcesPathToThis));
+            SetDirtySaveAndRefresh(); // TODO: Fix possible recursion?
+#endif
             return table;
         }
 
@@ -65,49 +171,76 @@ namespace NPTP.ReferenceableScriptables
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
-
-        public static SerializableDictionary<string, string> EDITOR_GetTable() => Table;
         
-        public static bool IsValidEntry(ReferenceableScriptable scriptable) => Instance.IsValidEntryNonStatic(scriptable);
-        private bool IsValidEntryNonStatic(ReferenceableScriptable scriptable)
+        internal static bool RemoveDeadEntries()
         {
-            if (!guidToPathTable.TryGetValue(scriptable.Guid, out string pathInsideResources))
-            {
-                return false;
-            }
-
-            var container = AssetDatabase.LoadAssetAtPath<ScriptableReferenceContainer>(Referenceables.GetContainerAssetPath(pathInsideResources));
-            if (container == null || container.Reference == null)
-            {
-                return false;
-            }
-
-            return container.Reference == scriptable;
-        }
-        
-        internal static void Add(ReferenceableScriptable scriptable) => Instance.AddNonStatic(scriptable);
-        private void AddNonStatic(ReferenceableScriptable scriptable)
-        {
-            string guid = scriptable.Guid;
-            string path = Referenceables.GetResourcesContainerPath(scriptable.GetType(), scriptable.Guid);
-
-            if (guidToPathTable.TryAdd(guid, path))
-            {
-                SetDirtySaveAndRefresh();
-            }
-        }
-
-        internal static void Remove(ReferenceableScriptable rs) => Instance.RemoveNonStatic(rs);
-        private void RemoveNonStatic(ReferenceableScriptable scriptable)
-        {
-            // Search all containers and remove any that refer back to this scriptable. 
             bool dirty = false;
-            dirty |= Referenceables.DeleteContainersContaining(scriptable);
-            dirty |= guidToPathTable.Remove(scriptable.Guid);
+            List<string> guidsToRemove = new();
             
-            if (dirty)
+            foreach (KVP<string, string> guidPathPair in GuidToPathTable)
             {
-                SetDirtySaveAndRefresh();
+                string guid = guidPathPair.Key;
+                string resourcesPath = guidPathPair.Value;
+
+                string containerPath = Paths.GetAssetPathFromResourcesPath(resourcesPath);
+                var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(containerPath);
+                if (container == null)
+                {
+                    guidsToRemove.Add(guid);
+                    dirty = true;
+                }
+            }
+
+            foreach (string guid in guidsToRemove)
+            {
+                GuidToPathTable.Remove(guid);
+                RemoveGuidFromNameToGuidsTable(guid);
+            }
+
+            return dirty;
+        }
+
+        private static void RemoveGuidFromNameToGuidsTable(string guid)
+        {
+            List<string> names = new();
+            List<string[]> guids = new();
+
+            foreach (KVP<string, string[]> nameGuidsPair in NameToGuidsTable)
+            {
+                string name = nameGuidsPair.Key;
+                List<string> guidsList = nameGuidsPair.Value.ToList();
+
+                bool changed = false;
+
+                for (int i = 0; i < guidsList.Count;)
+                {
+                    if (guidsList[i] == guid)
+                    {
+                        changed = true;
+                        guidsList.RemoveAt(i);
+                        continue;
+                    }
+
+                    i++;
+                }
+
+                if (changed)
+                {
+                    names.Add(name);
+                    guids.Add(guidsList.ToArray());
+                }
+            }
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (guids[i].Length == 0)
+                {
+                    NameToGuidsTable.Remove(names[i]);
+                }
+                else
+                {
+                    NameToGuidsTable[names[i]] = guids[i];
+                }
             }
         }
 #endif

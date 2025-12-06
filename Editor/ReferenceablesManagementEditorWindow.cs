@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NPTP.ReferenceableScriptables.AssetTypes;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace NPTP.ReferenceableScriptables.Editor
 {
-    public class ReferenceablesEditorWindow : EditorWindow
+    internal sealed class ReferenceablesManagementEditorWindow : EditorWindow
     {
         private class ReferenceableToggler
         {
-            public ReferenceableScriptable scriptable;
-            public bool toggle;
+            internal readonly ScriptableObject scriptable;
+            internal bool toggle;
 
-            public ReferenceableToggler(ReferenceableScriptable scriptable, bool toggle)
+            internal ReferenceableToggler(ScriptableObject scriptable, bool toggle)
             {
                 this.scriptable = scriptable;
                 this.toggle = toggle;
@@ -23,29 +22,32 @@ namespace NPTP.ReferenceableScriptables.Editor
         }
         
         private const string MENU_ITEM_PATH = "Tools/Referenceables Management";
-
-        private ReferenceableScriptable[] scriptables = Array.Empty<ReferenceableScriptable>();
+        
+        private static IEnumerable<Type> ExcludedScriptableObjectTypes => new[] { typeof(ReferenceablesTable), typeof(ReferenceableScriptableContainer) };
+        
+        private readonly Dictionary<Type, List<ReferenceableToggler>> typeToReferenceableToggler = new();
+        private ScriptableObject[] scriptables = Array.Empty<ScriptableObject>();
         private Vector2 scrollPosition = Vector2.zero;
-        private Dictionary<Type, List<ReferenceableToggler>> typeToReferenceableToggler = new();
         
         [MenuItem(MENU_ITEM_PATH)]
         private static void Init()
         {
-            ReferenceablesEditorWindow window = (ReferenceablesEditorWindow)GetWindow(typeof(ReferenceablesEditorWindow));
+            ReferenceablesManagementEditorWindow window = (ReferenceablesManagementEditorWindow)GetWindow(typeof(ReferenceablesManagementEditorWindow));
             window.Show();
         }
 
         private void OnEnable()
         {
+            titleContent = new GUIContent("Referenceables Management");
             Refresh();
         }
 
         private void Refresh()
         {
             typeToReferenceableToggler.Clear();
-            scriptables = AssetDatabaseUtility.GetAssets<ReferenceableScriptable>();
+            scriptables = AssetDatabaseUtility.GetAssetsOfTypeWithExclusions<ScriptableObject>(ExcludedScriptableObjectTypes);
 
-            foreach (ReferenceableScriptable scriptable in scriptables)
+            foreach (ScriptableObject scriptable in scriptables)
             {
                 Type type = scriptable.GetType();
                 if (!typeToReferenceableToggler.ContainsKey(type))
@@ -53,7 +55,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                     typeToReferenceableToggler.Add(type, new List<ReferenceableToggler>());
                 }
                 
-                typeToReferenceableToggler[type].Add(new ReferenceableToggler(scriptable, ReferenceablesTable.IsValidEntry(scriptable)));
+                typeToReferenceableToggler[type].Add(new ReferenceableToggler(scriptable, Referenceables.IsValidEntry(scriptable)));
             }
         }
 
@@ -61,9 +63,14 @@ namespace NPTP.ReferenceableScriptables.Editor
         {
             bool shouldRefresh = false;
             
-            EditorGUILayout.LabelField("Referenceables", EditorStyles.whiteLargeLabel);
+            EditorGUILayout.LabelField("Referenceables Management", EditorStyles.whiteLargeLabel);
             EditorInspectorUtility.DrawHorizontalLine();
             EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Clean on pre-process build?", GUILayout.ExpandWidth(true));
+            Referenceables.CleanOnPreProcessBuild = EditorGUILayout.Toggle(Referenceables.CleanOnPreProcessBuild, GUILayout.ExpandWidth(true));
+            EditorGUILayout.EndHorizontal();
 
             if (GUILayout.Button("Refresh"))
             {
@@ -122,7 +129,7 @@ namespace NPTP.ReferenceableScriptables.Editor
                 {
                     EditorGUILayout.BeginHorizontal();
 
-                    EditorGUILayout.ObjectField(list[i].scriptable, typeof(ReferenceableScriptable), true, GUILayout.Width(250));
+                    EditorGUILayout.ObjectField(list[i].scriptable, typeof(ScriptableObject), true, GUILayout.Width(250));
                 
                     bool previousValue = list[i].toggle;
                     list[i].toggle = EditorGUILayout.Toggle(list[i].toggle, GUILayout.Width(100));
@@ -146,14 +153,14 @@ namespace NPTP.ReferenceableScriptables.Editor
             }
         }
 
-        private void MakeReferenceable(ReferenceableScriptable scriptable, bool referenceable)
+        private void MakeReferenceable(ScriptableObject scriptable, bool referenceable)
         {
             Referenceables.MakeReferenceable(scriptable, referenceable);
         }
 
-        private void MakeAllReferenceable(IEnumerable<ReferenceableScriptable> collection, bool referenceable)
+        private void MakeAllReferenceable(IEnumerable<ScriptableObject> collection, bool referenceable)
         {
-            foreach (ReferenceableScriptable scriptable in collection)
+            foreach (ScriptableObject scriptable in collection)
             {
                 Referenceables.MakeReferenceable(scriptable, referenceable);
             }

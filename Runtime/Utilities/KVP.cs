@@ -1,21 +1,21 @@
 ﻿using System;
 using UnityEngine;
 
-namespace NPTP.ReferenceableScriptables.Utilities.Collections
+namespace NPTP.ReferenceableScriptables.Utilities
 {
     /// <summary>
-    /// Serializable version of a Key Value Pair struct.
+    /// Serializable version of a KVP (Key Value Pair) struct.
     /// </summary>
     [Serializable]
-    public struct KeyValueCombo<TKey, TValue>
+    internal struct KVP<TKey, TValue>
     {
         [SerializeField] private TKey key;
-        public TKey Key => key;
+        internal TKey Key => key;
         
         [SerializeField] private TValue value;
-        public TValue Value => value;
+        internal TValue Value => value;
         
-        public KeyValueCombo(TKey key, TValue value)
+        internal KVP(TKey key, TValue value)
         {
             this.key = key;
             this.value = value;

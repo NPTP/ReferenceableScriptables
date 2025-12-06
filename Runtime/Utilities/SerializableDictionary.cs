@@ -1,21 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
-namespace NPTP.ReferenceableScriptables.Utilities.Collections
+namespace NPTP.ReferenceableScriptables.Utilities
 {
     /// <summary>
     /// Based on one of Unity's serializable dictionaries for a customizable/maintainable version.
     /// </summary>
     [Serializable]
-    public sealed class SerializableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ISerializationCallbackReceiver
+    internal sealed class SerializableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
-        [SerializeField] private List<KeyValueCombo<TKey, TValue>> keyValueCombos = new();
+        [SerializeField] private List<KVP<TKey, TValue>> keyValuePairs = new();
 
         private Dictionary<TKey, TValue> internalDictionary = new();
 
@@ -29,7 +26,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
                 if (!EditorApplication.isPlaying)
                 {
-                    return keyValueCombos.Count;
+                    return keyValuePairs.Count;
                 }
 #endif
                 return internalDictionary.Count;
@@ -43,12 +40,12 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
                 if (!EditorApplication.isPlaying)
                 {
-                    for (int i = 0; i < keyValueCombos.Count; i++)
+                    for (int i = 0; i < keyValuePairs.Count; i++)
                     {
-                        KeyValueCombo<TKey, TValue> keyValueCombo = keyValueCombos[i];
-                        if (keyValueCombo.Key.Equals(key))
+                        KVP<TKey, TValue> kvp = keyValuePairs[i];
+                        if (kvp.Key.Equals(key))
                         {
-                            return keyValueCombo.Value;
+                            return kvp.Value;
                         }
                     }
 
@@ -63,17 +60,17 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
                 if (!EditorApplication.isPlaying)
                 {
-                    for (int i = 0; i < keyValueCombos.Count; i++)
+                    for (int i = 0; i < keyValuePairs.Count; i++)
                     {
-                        KeyValueCombo<TKey, TValue> keyValueCombo = keyValueCombos[i];
-                        if (keyValueCombo.Key.Equals(key))
+                        KVP<TKey, TValue> kvp = keyValuePairs[i];
+                        if (kvp.Key.Equals(key))
                         {
-                            keyValueCombos[i] = new KeyValueCombo<TKey, TValue>(key, value);
+                            keyValuePairs[i] = new KVP<TKey, TValue>(key, value);
                             return;
                         }
                     }
 
-                    keyValueCombos.Add(new KeyValueCombo<TKey, TValue>(key, value));
+                    keyValuePairs.Add(new KVP<TKey, TValue>(key, value));
                     return;
                 }
 #endif
@@ -82,19 +79,19 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             }
         }
 
-        public TKey this[TValue value]
+        internal TKey this[TValue value]
         {
             get
             {
 #if UNITY_EDITOR
                 if (!EditorApplication.isPlaying)
                 {
-                    for (int i = 0; i < keyValueCombos.Count; i++)
+                    for (int i = 0; i < keyValuePairs.Count; i++)
                     {
-                        KeyValueCombo<TKey, TValue> keyValueCombo = keyValueCombos[i];
-                        if (keyValueCombo.Value.Equals(value))
+                        KVP<TKey, TValue> kvp = keyValuePairs[i];
+                        if (kvp.Value.Equals(value))
                         {
-                            return keyValueCombo.Key;
+                            return kvp.Key;
                         }
                     }
 
@@ -113,18 +110,18 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             }
         }
 
-        public void ChangeKey(TValue value, TKey newKey)
+        internal void ChangeKey(TValue value, TKey newKey)
         {
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
                
-                for (int i = 0; i < keyValueCombos.Count; i++)
+                for (int i = 0; i < keyValuePairs.Count; i++)
                 {
-                    KeyValueCombo<TKey, TValue> keyValueCombo = keyValueCombos[i];
-                    if (keyValueCombo.Value.Equals(value))
+                    KVP<TKey, TValue> kvp = keyValuePairs[i];
+                    if (kvp.Value.Equals(value))
                     {
-                        keyValueCombos[i] = new KeyValueCombo<TKey, TValue>(newKey, value);
+                        keyValuePairs[i] = new KVP<TKey, TValue>(newKey, value);
                         break;
                     }
                 }
@@ -150,18 +147,17 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             }
         }
 
-        public void AddRange(IDictionary<TKey, TValue> items)
+        internal void AddRange(IDictionary<TKey, TValue> items)
         {
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                List<KeyValueCombo<TKey, TValue>> pairs = new();
                 foreach (KeyValuePair<TKey, TValue> pair in items)
                 {
-                    KeyValueCombo<TKey, TValue> combo = new KeyValueCombo<TKey, TValue>(pair.Key, pair.Value);
-                    if (!keyValueCombos.Contains(combo))
+                    KVP<TKey, TValue> combo = new KVP<TKey, TValue>(pair.Key, pair.Value);
+                    if (!keyValuePairs.Contains(combo))
                     {
-                        keyValueCombos.Add(combo);
+                        keyValuePairs.Add(combo);
                     }
                 }
                 
@@ -179,7 +175,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                foreach (KeyValueCombo<TKey, TValue> keyValueCombo in keyValueCombos)
+                foreach (KVP<TKey, TValue> keyValueCombo in keyValuePairs)
                 {
                     if (EqualityComparer<TKey>.Default.Equals(keyValueCombo.Key, key))
                     {
@@ -188,7 +184,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
                     }
                 }
 
-                keyValueCombos.Add(new KeyValueCombo<TKey, TValue>(key, value));
+                keyValuePairs.Add(new KVP<TKey, TValue>(key, value));
                 return;
             }
 #endif
@@ -196,12 +192,12 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             internalDictionary.Add(key, value);
         }
 
-        public bool TryAdd(TKey key, TValue value)
+        internal bool TryAdd(TKey key, TValue value)
         {
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                foreach (KeyValueCombo<TKey, TValue> keyValueCombo in keyValueCombos)
+                foreach (KVP<TKey, TValue> keyValueCombo in keyValuePairs)
                 {
                     if (EqualityComparer<TKey>.Default.Equals(keyValueCombo.Key, key))
                     {
@@ -222,9 +218,9 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                for (int i = 0; i < keyValueCombos.Count; i++)
+                for (int i = 0; i < keyValuePairs.Count; i++)
                 {
-                    if (EqualityComparer<TKey>.Default.Equals(keyValueCombos[i].Key, key))
+                    if (EqualityComparer<TKey>.Default.Equals(keyValuePairs[i].Key, key))
                     {
                         return true;
                     }
@@ -237,14 +233,14 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
             return internalDictionary.ContainsKey(key);
         }
         
-        public bool ContainsValue(TValue value)
+        internal bool ContainsValue(TValue value)
         {
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                for (int i = 0; i < keyValueCombos.Count; i++)
+                for (int i = 0; i < keyValuePairs.Count; i++)
                 {
-                    if (EqualityComparer<TValue>.Default.Equals(keyValueCombos[i].Value, value))
+                    if (EqualityComparer<TValue>.Default.Equals(keyValuePairs[i].Value, value))
                     {
                         return true;
                     }
@@ -262,11 +258,11 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                for (int i = 0; i < keyValueCombos.Count; i++)
+                for (int i = 0; i < keyValuePairs.Count; i++)
                 {
-                    if (EqualityComparer<TKey>.Default.Equals(keyValueCombos[i].Key, key))
+                    if (EqualityComparer<TKey>.Default.Equals(keyValuePairs[i].Key, key))
                     {
-                        keyValueCombos.RemoveAt(i);
+                        keyValuePairs.RemoveAt(i);
                         return true;
                     }
                 }
@@ -282,11 +278,11 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                for (int i = 0; i < keyValueCombos.Count; i++)
+                for (int i = 0; i < keyValuePairs.Count; i++)
                 {
-                    if (EqualityComparer<TKey>.Default.Equals(keyValueCombos[i].Key, key))
+                    if (EqualityComparer<TKey>.Default.Equals(keyValuePairs[i].Key, key))
                     {
-                        value = keyValueCombos[i].Value;
+                        value = keyValuePairs[i].Value;
                         return true;
                     }
                 }
@@ -303,7 +299,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                keyValueCombos.Clear();
+                keyValuePairs.Clear();
                 return;
             }
 #endif
@@ -315,7 +311,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying)
             {
-                return keyValueCombos.GetEnumerator();
+                return keyValuePairs.GetEnumerator();
             }
 #endif
             return internalDictionary.GetEnumerator();
@@ -328,7 +324,7 @@ namespace NPTP.ReferenceableScriptables.Utilities.Collections
         public void OnAfterDeserialize()
         {
             internalDictionary.Clear();
-            foreach (KeyValueCombo<TKey, TValue> keyValuePair in keyValueCombos)
+            foreach (KVP<TKey, TValue> keyValuePair in keyValuePairs)
             {
                 internalDictionary.TryAdd(keyValuePair.Key, keyValuePair.Value);
             }
