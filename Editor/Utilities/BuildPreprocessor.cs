@@ -9,7 +9,10 @@ namespace NPTP.ReferenceableScriptables.Editor.Utilities
         
         public void OnPreprocessBuild(BuildReport report)
         {
-            Referenceables.Clean();
+            if (Referenceables.CleanOnPreProcessBuild)
+            {
+                Referenceables.Clean();
+            }
         }
     }
 }

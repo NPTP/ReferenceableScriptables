@@ -24,7 +24,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         private const string MENU_ITEM_PATH = "Tools/Referenceables Management";
         
         private static IEnumerable<Type> ExcludedScriptableObjectTypes => new[] { typeof(ReferenceablesTable), typeof(ReferenceableScriptableContainer) };
-
+        
         private readonly Dictionary<Type, List<ReferenceableToggler>> typeToReferenceableToggler = new();
         private ScriptableObject[] scriptables = Array.Empty<ScriptableObject>();
         private Vector2 scrollPosition = Vector2.zero;
@@ -66,6 +66,11 @@ namespace NPTP.ReferenceableScriptables.Editor
             EditorGUILayout.LabelField("Referenceables Management", EditorStyles.whiteLargeLabel);
             EditorInspectorUtility.DrawHorizontalLine();
             EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Clean on pre-process build?", GUILayout.ExpandWidth(true));
+            Referenceables.CleanOnPreProcessBuild = EditorGUILayout.Toggle(Referenceables.CleanOnPreProcessBuild, GUILayout.ExpandWidth(true));
+            EditorGUILayout.EndHorizontal();
 
             if (GUILayout.Button("Refresh"))
             {

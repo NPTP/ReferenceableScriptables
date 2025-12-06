@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
-using NPTP.ReferenceableScriptables.Utilities;
 using NPTP.ReferenceableScriptables.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -11,6 +10,8 @@ namespace NPTP.ReferenceableScriptables.Editor
 {
     internal static class Referenceables
     {
+        private const string CLEAN_ON_PREPROCESS_BUILD_EDITOR_PREFS_KEY = nameof(ReferenceableScriptables) + "_" + nameof(CleanOnPreProcessBuild);
+
         private static event Action onReferenceablesUpdated;
         internal static event Action OnReferenceablesUpdated
         {
@@ -22,7 +23,11 @@ namespace NPTP.ReferenceableScriptables.Editor
             remove => onReferenceablesUpdated -= value;
         }
         
-        #region Internal
+        internal static bool CleanOnPreProcessBuild
+        {
+            get => EditorPrefs.GetBool(CLEAN_ON_PREPROCESS_BUILD_EDITOR_PREFS_KEY, true);
+            set => EditorPrefs.SetBool(CLEAN_ON_PREPROCESS_BUILD_EDITOR_PREFS_KEY, value);
+        }
         
         internal static bool IsValidEntry(ScriptableObject scriptable)
         {
@@ -63,8 +68,6 @@ namespace NPTP.ReferenceableScriptables.Editor
 
             Debug.Log($"Referenceables Table cleaned.");
         }
-
-        #endregion
 
         #region Add
         
