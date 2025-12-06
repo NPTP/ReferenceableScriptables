@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NPTP.ReferenceableScriptables.Editor.Utilities;
 using NPTP.ReferenceableScriptables.Utilities;
+using NPTP.ReferenceableScriptables.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,12 +26,12 @@ namespace NPTP.ReferenceableScriptables.Editor
         
         internal static bool IsValidEntry(ScriptableObject scriptable)
         {
-            if (!ReferenceablesTable.Table.TryGetValue(scriptable.GetAssetGuid(), out string pathInsideResources))
+            if (!ReferenceablesTable.TryGetResourcesPathByGuid(scriptable.GetAssetGuid(), out string resourcesPath))
             {
                 return false;
             }
 
-            var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(GetContainerAssetPath(pathInsideResources));
+            var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(Paths.GetAssetPathFromResourcesPath(resourcesPath));
             if (container == null || container.Reference == null)
             {
                 return false;
@@ -53,7 +53,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             dirty |= FixContainerPaths();
             dirty |= DeleteEmptyAndUnreferencedContainers();
             dirty |= DeleteEmptyFolders();
-            dirty |= RemoveDeadTableEntries();
+            dirty |= ReferenceablesTable.RemoveDeadEntries();
 
             if (dirty)
             {
@@ -62,69 +62,6 @@ namespace NPTP.ReferenceableScriptables.Editor
             }
 
             Debug.Log($"Referenceables Table cleaned.");
-        }
-
-        #endregion
-
-        #region Paths (private)
-        
-        private static string GetAssetsFolderPath(Type scriptableType)
-        {
-            return $"Assets/Resources/Referenceables/{scriptableType.Name}";
-        }
-
-        private static string GetAssetsContainerPath(Type scriptableType, string containerName)
-        {
-            return $"Assets/Resources/{GetResourcesContainerPath(scriptableType, containerName)}.asset";
-        }
-
-        private static string GetResourcesContainerPath(Type scriptableType, string containerName)
-        {
-            return $"Referenceables/{scriptableType.Name}/{containerName}";
-        }
-        
-        private static void CreatePath(string assetPath)
-        {
-            if (!assetPath.StartsWith("Assets/"))
-            {
-                Debug.LogError("Path didn't start with 'Assets/'. Can't create folders");
-                return;
-            }
-
-            List<string> folders = assetPath.Split('/').ToList();
-            int count = folders.Count;
-            if (count == 1) return;
-            for (int i = 0; i < count - 1; i++)
-            {
-                string concat = folders[0] + '/' + folders[1];
-                if (!AssetDatabase.IsValidFolder(concat))
-                {
-                    AssetDatabase.CreateFolder(parentFolder: folders[0], newFolderName: folders[1]);
-                }
-
-                folders[0] = concat;
-                folders.RemoveAt(1);
-            }
-        }
-
-        private static string GetContainerAssetPath(string pathInsideResources)
-        {
-            return $"Assets/Resources/{pathInsideResources}.asset";
-        }
-
-        private static string ConvertAssetPathToResourcesPath(string assetPath)
-        {
-            return assetPath
-                .Remove(assetPath.LastIndexOf(".asset", StringComparison.Ordinal))
-                .Remove(0, "Assets/Resources/".Length);
-        }
-
-        private static string GetContainingFolderFromAssetPath(string assetPath)
-        {
-            string folder = assetPath;
-            folder = folder.Remove(folder.LastIndexOf('/'));
-            folder = folder.Remove(0, folder.LastIndexOf('/') + 1);
-            return folder;
         }
 
         #endregion
@@ -146,11 +83,11 @@ namespace NPTP.ReferenceableScriptables.Editor
             Type scriptableType = scriptable.GetType();
             ReferenceableScriptableContainer scriptableContainer = ScriptableObject.CreateInstance<ReferenceableScriptableContainer>();
             ReflectionUtility.SetSerializedField(scriptableContainer, "reference", scriptable);
-            CreatePath(GetAssetsFolderPath(scriptableType));
+            Paths.CreatePath(Paths.GetAssetsFolderPath(scriptableType));
             
             AddToTable(scriptable);
             
-            AssetDatabase.CreateAsset(scriptableContainer, GetAssetsContainerPath(scriptableType, guid));
+            AssetDatabase.CreateAsset(scriptableContainer, Paths.GetAssetsContainerPath(scriptableType, guid));
 
             EditorUtility.SetDirty(scriptable);
             EditorUtility.SetDirty(scriptableContainer);
@@ -163,10 +100,11 @@ namespace NPTP.ReferenceableScriptables.Editor
         
         private static void AddToTable(ScriptableObject scriptable)
         {
+            string name = scriptable.name;
             string guid = scriptable.GetAssetGuid();
-            string path = GetResourcesContainerPath(scriptable.GetType(), scriptable.GetAssetGuid());
+            string path = Paths.GetResourcesContainerPath(scriptable.GetType(), scriptable.GetAssetGuid());
 
-            if (ReferenceablesTable.Table.TryAdd(guid, path))
+            if (ReferenceablesTable.Add(name, guid, path))
             {
                 ReferenceablesTable.SetDirtySaveAndRefresh();
             }
@@ -191,10 +129,13 @@ namespace NPTP.ReferenceableScriptables.Editor
 
         private static void RemoveFromTable(ScriptableObject scriptable)
         {
-            // Search all containers and remove any that refer back to this scriptable. 
+            string name = scriptable.name;
+            string guid = scriptable.GetAssetGuid();
+            
             bool dirty = false;
-            dirty |= DeleteContainersContaining(scriptable);
-            dirty |= ReferenceablesTable.Table.Remove(scriptable.GetAssetGuid());
+            
+            dirty |= DeleteAllContainersContaining(scriptable);
+            dirty |= ReferenceablesTable.Remove(name, guid);
             
             if (dirty)
             {
@@ -203,7 +144,7 @@ namespace NPTP.ReferenceableScriptables.Editor
         }
         
         #endregion
-        
+
         private static bool FixContainerPaths()
         {
             bool dirty = false;
@@ -211,13 +152,13 @@ namespace NPTP.ReferenceableScriptables.Editor
             List<ReferenceableScriptableContainer> containers = GetContainers();
             foreach (ReferenceableScriptableContainer container in containers)
             {
-                string containingFolder = GetContainingFolderFromAssetPath(AssetDatabase.GetAssetPath(container));
+                string containingFolder = Paths.GetContainingFolderFromAssetPath(AssetDatabase.GetAssetPath(container));
 
                 if (container.Reference != null && containingFolder != container.Reference.GetType().Name)
                 {
                     ScriptableObject scriptable = container.Reference;
-                    CreatePath(GetAssetsFolderPath(scriptable.GetType()));
-                    AssetDatabase.MoveAsset(AssetDatabase.GetAssetPath(container), GetAssetsContainerPath(scriptable.GetType(), container.name));
+                    Paths.CreatePath(Paths.GetAssetsFolderPath(scriptable.GetType()));
+                    AssetDatabase.MoveAsset(AssetDatabase.GetAssetPath(container), Paths.GetAssetsContainerPath(scriptable.GetType(), container.name));
                     dirty = true;
                 }
             }
@@ -225,7 +166,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             return dirty;
         }
 
-        private static bool DeleteContainersContaining(ScriptableObject scriptable)
+        private static bool DeleteAllContainersContaining(ScriptableObject scriptable)
         {
             bool deleted = false;
             
@@ -247,9 +188,7 @@ namespace NPTP.ReferenceableScriptables.Editor
             
             foreach (ReferenceableScriptableContainer container in GetContainers())
             {
-                if (container.Reference == null ||
-                    !ReferenceablesTable.Table.ContainsKey(container.Reference.GetAssetGuid()) ||
-                    !ReferenceablesTable.Table.ContainsValue(ConvertAssetPathToResourcesPath(AssetDatabase.GetAssetPath(container))))
+                if (container.Reference == null || !ReferenceablesTable.ContainsEntry(container.Reference.GetAssetGuid(), Paths.GetReferenceablesTablePathValue(container)))
                 {
                     AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(container));
                     deleted = true;
@@ -276,29 +215,6 @@ namespace NPTP.ReferenceableScriptables.Editor
             return containers;
         }
 
-        private static bool RemoveDeadTableEntries()
-        {
-            bool dirty = false;
-            List<string> keysToRemove = new();
-            foreach (KVP<string, string> combo in ReferenceablesTable.Table)
-            {
-                string containerPath = GetContainerAssetPath(pathInsideResources: combo.Value);
-                var container = AssetDatabase.LoadAssetAtPath<ReferenceableScriptableContainer>(containerPath);
-                if (container == null)
-                {
-                    keysToRemove.Add(combo.Key);
-                    dirty = true;
-                }
-            }
-
-            foreach (string key in keysToRemove)
-            {
-                ReferenceablesTable.Table.Remove(key);
-            }
-
-            return dirty;
-        }
-        
         private static bool DeleteEmptyFolders()
         {
             bool deleted = false;

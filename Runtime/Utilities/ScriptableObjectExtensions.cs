@@ -8,24 +8,34 @@ namespace NPTP.ReferenceableScriptables.Utilities
         {
             if (scriptableObject == null)
             {
-                Debug.LogWarning("Trying to serialize a null scriptable object.");
+                Debug.LogWarning("Trying to serialize a null ScriptableObject.");
                 serializationID = ReferenceableScriptableID<T>.Invalid;
                 return false;
             }
 
-            foreach (string guid in ReferenceablesTable.Guids)
+            if (!ReferenceablesTable.TryGetGuidsByName(scriptableObject.name, out var guids))
             {
-                if (!ReferenceablesTable.TryLoad(guid, out T loadedScriptable) ||
-                    loadedScriptable != scriptableObject)
-                {
-                    continue;
-                }
-                
-                serializationID = new ReferenceableScriptableID<T>(guid);
+                Debug.LogWarning("Trying to serialize a non-referenceable ScriptableObject.");
+                serializationID = ReferenceableScriptableID<T>.Invalid;
+                return false;
+            }
+
+            if (guids.Length == 1)
+            {
+                serializationID = new ReferenceableScriptableID<T>(guids[0]);
                 return true;
             }
-            
-            Debug.LogWarning("Trying to serialize a non-referenceable scriptable object.");
+
+            foreach (string guid in guids)
+            {
+                if (ReferenceablesTable.TryLoad(guid, out T loadedScriptable) && loadedScriptable == scriptableObject)
+                {
+                    serializationID = new ReferenceableScriptableID<T>(guid);
+                    return true;
+                }
+            }
+
+            Debug.LogWarning($"Unknown error trying to serialize ScriptableObject {scriptableObject.name}");
             serializationID = ReferenceableScriptableID<T>.Invalid;
             return false;
         }

@@ -78,14 +78,14 @@ namespace NPTP.ReferenceableScriptables.Editor.PropertyDrawers
             
             hasInitialized = true;
 
-            Referenceables.OnReferenceablesUpdated += HandleReferenceablesUpdated;
-                
-            SerializableDictionary<string, string> table = ReferenceablesTable.Table;
-
             if (!TryGetScriptableObjectType(property, out scriptableObjectType))
             {
                 return;
             }
+            
+            Referenceables.OnReferenceablesUpdated += HandleReferenceablesUpdated;
+            
+            SerializableDictionary<string, string> table = ReferenceablesTable.GuidToPathTable;
 
             List<string> guidsList = new() { string.Empty };
             List<string> pathsList = new() { string.Empty };
