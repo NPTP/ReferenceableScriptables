@@ -5,6 +5,7 @@
 - Now supports any `ScriptableObject` instead of requiring inheritance from `ReferenceableScriptable`
   - `ReferenceableScriptable` is removed as it is now redundant
   - `Referenceable` type is also removed for the same reason. Use the serializable `ReferenceableScriptableID` instead.
+- Allow choice of cleaning referenceables or not on pre-process build
 - Cleanup runtime/editor assemblies
 - Better custom inspector functionality
 
